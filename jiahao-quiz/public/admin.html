@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘉豪量表 - 数据统计后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-title {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-percentage {
+            font-size: 14px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .chart-title {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .bar-label {
+            width: 150px;
+            font-size: 14px;
+            color: #555;
+            text-align: right;
+        }
+
+        .bar {
+            flex: 1;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .bar-value {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #555;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .refresh-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bar-label {
+                width: 100px;
+                font-size: 12px;
+            }
+
+            .results-table {
+                font-size: 12px;
+            }
+
+            .results-table th,
+            .results-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>嘉豪量表 - 数据统计后台</h1>
+
+        <button class="refresh-btn" onclick="loadStats()">刷新数据</button>
+
+        <div id="loading" class="loading">加载中...</div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="stats-content" style="display: none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">总测试人数</div>
+                    <div class="stat-value" id="total-tests">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">平均分数</div>
+                    <div class="stat-value" id="avg-score">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">平均嘉豪内核浓度</div>
+                    <div class="stat-value" id="avg-percentage">0%</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">结果分布</div>
+                <div class="bar-chart" id="result-distribution"></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title">最近测试记录</div>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>分数</th>
+                            <th>嘉豪内核浓度</th>
+                            <th>结果等级</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-results"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadStats() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const content = document.getElementById('stats-content');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+
+            try {
+                const [statsResponse, resultsResponse] = await Promise.all([
+                    fetch('/api/stats'),
+                    fetch('/api/results')
+                ]);
+
+                const statsData = await statsResponse.json();
+                const resultsData = await resultsResponse.json();
+
+                if (statsData.success && resultsData.success) {
+                    displayStats(statsData.data, resultsData.data);
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                } else {
+                    throw new Error('获取数据失败');
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = '加载数据失败: ' + err.message;
+            }
+        }
+
+        function displayStats(stats, results) {
+            // 计算总数
+            const totalTests = results.length;
+            document.getElementById('total-tests').textContent = totalTests;
+
+            // 计算平均分
+            const avgScore = totalTests > 0 
+                ? (results.reduce((sum, r) => sum + r.score, 0) / totalTests).toFixed(1)
+                : 0;
+            document.getElementById('avg-score').textContent = avgScore;
+
+            // 计算平均百分比
+            const avgPercentage = totalTests > 0
+                ? (results.reduce((sum, r) => sum + r.percentage, 0) / totalTests).toFixed(1)
+                : 0;
+            document.getElementById('avg-percentage').textContent = avgPercentage + '%';
+
+            // 显示结果分布
+            const distributionContainer = document.getElementById('result-distribution');
+            distributionContainer.innerHTML = '';
+
+            stats.forEach(stat => {
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                barItem.innerHTML = `
+                    <div class="bar-label">${stat.result_level}</div>
+                    <div class="bar">
+                        <div class="bar-fill" style="width: ${stat.percentage}%"></div>
+                        <span class="bar-value">${stat.count}人 (${stat.percentage}%)</span>
+                    </div>
+                `;
+                distributionContainer.appendChild(barItem);
+            });
+
+            // 显示最近结果
+            const recentResults = document.getElementById('recent-results');
+            recentResults.innerHTML = '';
+
+            results.slice(0, 10).forEach(result => {
+                const row = document.createElement('tr');
+                const date = new Date(result.created_at).toLocaleString('zh-CN');
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${result.score}</td>
+                    <td>${result.percentage.toFixed(1)}%</td>
+                    <td>${result.result_level}</td>
+                `;
+                recentResults.appendChild(row);
+            });
+        }
+
+        // 页面加载时获取数据
+        loadStats();
+
+        // 每30秒自动刷新
+        setInterval(loadStats, 30000);
+    </script>
+</body>
+</html>

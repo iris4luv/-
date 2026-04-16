@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>嘉豪量表 - 测一测你有没有嘉豪式认知偏差</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .page {
+            padding: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            display: none;
+        }
+
+        .page.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        h1 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .intro-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 30px;
+            text-align: justify;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .question {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 18px 25px;
+            background: #f8f9fa;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .option:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #fff;
+            border-color: #667eea;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .result-title {
+            font-size: 28px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-score {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 30px;
+            text-align: justify;
+        }
+
+        .result-container {
+            text-align: center;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .page {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .question {
+                font-size: 18px;
+            }
+
+            .option {
+                padding: 15px 20px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 欢迎页 -->
+        <div class="page active" id="welcome-page">
+            <h1>嘉豪量表 - 测一测你有没有嘉豪式认知偏差</h1>
+            <div class="intro-text">
+                别再测那些表面行为了！真正的嘉豪量表，测的是你有没有嘉豪式的认知偏差——那种活在自己的世界里，把自卑活成酷的状态。
+            </div>
+            <div class="intro-text">
+                嘉豪的本质是内在自卑的人，用"装酷、叛逆、迷之自信"当保护壳，来掩盖自己的认知偏差——他们活在自己构建的"我是神秘酷哥"的理想里，对自己的实力有严重的高估，对外界的评价完全失准，被别人当乐子但自己完全没发现。
+            </div>
+            <div class="intro-text">
+                这个量表要测的就是这个深层的心理机制，不是表面的行为。准备好了吗？
+            </div>
+            <button class="btn" onclick="startQuiz()">开始测试</button>
+        </div>
+
+        <!-- 答题页 -->
+        <div class="page" id="quiz-page">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="question" id="question"></div>
+            <div class="options">
+                <div class="option" onclick="selectOption(0)">完全不符合</div>
+                <div class="option" onclick="selectOption(1)">不太符合</div>
+                <div class="option" onclick="selectOption(2)">比较符合</div>
+                <div class="option" onclick="selectOption(3)">完全符合</div>
+            </div>
+        </div>
+
+        <!-- 结果页 -->
+        <div class="page" id="result-page">
+            <div class="result-container">
+                <h1 class="result-title">测试结果</h1>
+                <div class="result-score" id="result-score"></div>
+                <div class="result-text" id="result-text"></div>
+                <button class="btn" id="restart-btn" onclick="restartQuiz()">重新测试</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            "我总觉得自己的真实实力比别人看到的要强很多，只是他们不懂我",
+            "我会故意装得很高冷神秘，其实是怕别人发现我没那么厉害",
+            "我很怕别人看穿我的不足，所以用特立独行来掩盖自己的普通",
+            "我经常会把自己的失败归咎于外界，而不是我自己的问题",
+            "我宁愿和全世界对抗，也不愿意承认我其实有做得不好的地方",
+            "我会通过否定所有的规则，来掩饰我其实没办法适应规则",
+            "我对自己的认知，和别人对我的认知，差得特别大",
+            "我其实很在意别人的看法，但我会装得我根本不在乎",
+            "我总觉得我和别人不一样，我是特别的，哪怕我没什么拿得出手的地方",
+            "我宁愿活在自己的理想里，也不愿意面对现实里其实很普通的自己"
+        ];
+
+        let currentQuestion = 0;
+        let totalScore = 0;
+        let currentResultLevel = '';
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function startQuiz() {
+            currentQuestion = 0;
+            totalScore = 0;
+            showQuestion();
+            showPage('quiz-page');
+        }
+
+        function showQuestion() {
+            document.getElementById('question').textContent = questions[currentQuestion];
+            const progress = ((currentQuestion) / questions.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function selectOption(score) {
+            totalScore += score;
+            currentQuestion++;
+
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            const percentage = (totalScore / (questions.length * 3)) * 100;
+            document.getElementById('result-score').textContent = percentage.toFixed(0) + '%';
+
+            let resultText = '';
+            let resultLevel = '';
+
+            if (percentage < 30) {
+                resultText = '【完全没偏差的正常人】你对自己的认知很准，既不自卑也不迷之自信，你能分清理想和现实，完全没有嘉豪的内核，你看那些嘉豪，就是活在自己的世界里醒不过来。';
+                resultLevel = '完全没偏差的正常人';
+            } else if (percentage < 60) {
+                resultText = '【轻微认知偏差】你偶尔会有点小美化自己，偶尔会装一下酷来掩饰小自卑，但你心里门清，你知道自己的真实水平，不会真的活在自己的世界里，顶多就是偶尔演一下。';
+                resultLevel = '轻微认知偏差';
+            } else if (percentage < 90) {
+                resultText = '【中度嘉豪内核】你已经有嘉豪的核心偏差了！你开始用高冷当壳，掩盖自己的自卑，你有点高估自己的实力，也开始听不进去别人的评价了，你是不是已经开始觉得别人都不懂你了？小心再下去就要变成赛级嘉豪了！';
+                resultLevel = '中度嘉豪内核';
+            } else {
+                resultText = '【纯种赛级嘉豪内核】完了，你就是标准的嘉豪本豪！你的理想自我和现实自我已经彻底脱节了！你用叛逆和酷当保护壳，把自己裹在自己的世界里，你高估自己的实力，把失败都怪给外界，你活在自己的酷哥梦里，却不知道别人早就把你当乐子了——这才是嘉豪最核心的本质啊！那些穿黑卫衣打碟都只是表象，你这才是真正的嘉豪！';
+                resultLevel = '纯种赛级嘉豪内核';
+            }
+
+            currentResultLevel = resultLevel;
+            document.getElementById('result-text').textContent = resultText;
+            showPage('result-page');
+
+            // 提交数据到后端
+            submitResult(totalScore, percentage, resultLevel);
+        }
+
+        async function submitResult(score, percentage, resultLevel) {
+            const btn = document.getElementById('restart-btn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>保存中...';
+
+            try {
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        score: score,
+                        percentage: percentage,
+                        resultLevel: resultLevel
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    console.log('测试结果已保存');
+                } else {
+                    console.error('保存失败:', data.error);
+                }
+            } catch (error) {
+                console.error('提交失败:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            totalScore = 0;
+            currentResultLevel = '';
+            document.getElementById('progress-fill').style.width = '0%';
+            showPage('welcome-page');
+        }
+    </script>
+</body>
+</html>
